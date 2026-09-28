@@ -3,11 +3,11 @@
      hacer push). Lee el viaje con la RPC `shared_trip` de Supabase (publishable key, solo lectura) y las fotos por la
      función `trip`. Español o inglés según el navegador; fechas y números con Intl. -->
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Martu</title>
-<meta property="og:title" content="Martu"><meta property="og:description" content="Un viaje compartido desde Martu">
+<title>Vayra</title>
+<meta property="og:title" content="Vayra"><meta property="og:description" content="Un viaje compartido desde Vayra">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  :root{--coral:#FF385C;--text:#222;--muted:#717171;--line:#DDD;--soft:#F7F7F7}
+  :root{--coral:#EE4A2F;--text:#1F1A24;--muted:#6E6573;--line:#E9E3DF;--soft:#F7F2EE}
   *{box-sizing:border-box}body{margin:0;font-family:-apple-system,system-ui,sans-serif;color:var(--text);background:#fff}
   header{padding:20px 16px 12px}h1{margin:0 0 4px;font-size:28px}header p{margin:0;color:var(--muted)}header .stats{color:var(--text);font-weight:600;margin-top:4px}
   #map{height:52vh;min-height:320px}
@@ -17,7 +17,7 @@
   .stop h2 small{margin-left:auto;font-weight:400;color:var(--muted);font-size:13px;white-space:nowrap}
   .n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--coral);color:#fff;font-size:13px;font-weight:700;align-items:center;justify-content:center;flex:none}
   .place{display:flex;gap:12px;align-items:center;padding:6px 0;color:inherit;text-decoration:none}.place img,.ph{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--soft);flex:none}
-  .place span{display:flex;flex-direction:column;min-width:0}.place b{font-weight:600}.place small{color:var(--muted)}
+  .place span{display:flex;flex-direction:column;min-width:0}.place .credit{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.place b{font-weight:600}.place small{color:var(--muted)}
   .marker{display:flex;width:26px;height:26px;border-radius:50%;background:var(--coral);color:#fff;font-weight:700;font-size:13px;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
   footer{padding:24px 16px;text-align:center;color:var(--coral);font-weight:800;font-size:20px}
   .empty{padding:48px 16px;text-align:center;color:var(--muted)}
@@ -29,10 +29,10 @@ const SUPABASE = "https://zdnnhskdtcinfmozkiyi.supabase.co";
 const KEY = "sb_publishable_FzK6lQWgadVVHTlxLKNMIQ_H7AwESdq";   // pública por diseño: RLS y la RPC protegen los datos
 const strings = {
   es: { places: "lugares", countries: "países", days: "días", nights: (n) => n === 1 ? "1 noche" : `${n} noches`,
-        open: "Usar como plantilla en Martu", hint: "Se abre en Martu para iPhone: el viaje entra como uno nuevo, con sus paradas y lugares.",
+        photo: "Foto", open: "Usar como plantilla en Vayra", hint: "Se abre en Vayra para iPhone: el viaje entra como uno nuevo, con sus paradas y lugares.",
         notFound: "Este viaje ya no se comparte.", eat: "Comer", sleep: "Dormir", do: "Hacer", see: "Ver", tip: "Tip" },
   en: { places: "places", countries: "countries", days: "days", nights: (n) => n === 1 ? "1 night" : `${n} nights`,
-        open: "Use as a template in Martu", hint: "Opens in Martu for iPhone: the trip comes in as a new one, with its stops and places.",
+        photo: "Photo", open: "Use as a template in Vayra", hint: "Opens in Vayra for iPhone: the trip comes in as a new one, with its stops and places.",
         notFound: "This trip is no longer shared.", eat: "Eat", sleep: "Sleep", do: "Do", see: "See", tip: "Tip" },
 };
 const lang = (navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
@@ -50,7 +50,7 @@ async function main() {
   const trip = r?.ok ? await r.json() : null;
   if (!trip) { document.getElementById("loading").textContent = t.notFound; return; }
 
-  document.title = `${trip.name} · Martu`;
+  document.title = `${trip.name} · Vayra`;
   const countries = new Set([...trip.stops, ...trip.places].map((x) => x.countryCode).filter(Boolean)).size;
   const days = Math.round((Date.parse(trip.endDate) - Date.parse(trip.startDate)) / 86_400_000) + 1;
   const stats = `${trip.places.length} ${t.places} · ${countries} ${t.countries} · ${days} ${t.days}`;
@@ -62,7 +62,7 @@ async function main() {
     return `<section class="stop"><h2><span class="n">${i + 1}</span>${esc(s.city)}<small>${t.nights(s.nights)} · ${day(arrivals[i])}</small></h2>
       ${places.map((p) => `<a class="place" ${/^https?:/i.test(p.sourceURL) ? `href="${esc(p.sourceURL)}" target="_blank" rel="noopener"` : ""}>
         ${p.photo ? `<img src="${SUPABASE}/functions/v1/trip/${encodeURIComponent(token)}/photo/${p.id}" alt="" loading="lazy">` : `<span class="ph"></span>`}
-        <span><b>${esc(p.name)}</b><small>${esc(t[p.category] ?? p.category)}${p.note ? " · " + esc(p.note) : ""}</small></span></a>`).join("")}
+        <span><b>${esc(p.name)}</b><small>${esc(t[p.category] ?? p.category)}</small>${p.photo && p.photoCredit ? `<small class="credit">${t.photo}: ${esc(p.photoCredit)}</small>` : ""}</span></a>`).join("")}
     </section>`;
   }).join("");
   document.getElementById("app").innerHTML = `
@@ -70,16 +70,16 @@ async function main() {
 <div id="map"></div>
 <a class="cta" href="martu://trip/${encodeURIComponent(token)}">${t.open}</a><p class="hint">${t.hint}</p>
 ${stopsHTML}
-<footer>Martu</footer>`;
+<footer>Vayra</footer>`;
 
   const map = L.map("map", { scrollWheelZoom: false });
   // ponytail: tiles OSM con nombres locales (Bangkok en tailandés); CARTO Voyager si molesta.
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(map);
   for (let i = 1; i < trip.stops.length; i++)
     L.polyline([[trip.stops[i - 1].latitude, trip.stops[i - 1].longitude], [trip.stops[i].latitude, trip.stops[i].longitude]],
-               { color: "#FF385C", weight: 3, dashArray: trip.stops[i].transport === "flight" ? "5 7" : null }).addTo(map);
+               { color: "#EE4A2F", weight: 3, dashArray: (trip.stops[i].transport || "").split(",").every(t => t === "flight") ? "5 7" : null }).addTo(map);
   for (const p of trip.places)
-    L.circleMarker([p.latitude, p.longitude], { radius: 5, color: "#fff", weight: 2, fillColor: "#FF385C", fillOpacity: 1 }).addTo(map).bindTooltip(p.name);
+    L.circleMarker([p.latitude, p.longitude], { radius: 5, color: "#fff", weight: 2, fillColor: "#EE4A2F", fillOpacity: 1 }).addTo(map).bindTooltip(p.name);
   trip.stops.forEach((s, i) =>
     L.marker([s.latitude, s.longitude], { icon: L.divIcon({ className: "", html: '<div class="marker">' + (i + 1) + "</div>", iconSize: [26, 26], iconAnchor: [13, 13] }) }).addTo(map).bindTooltip(s.city));
   const pts = [...trip.stops, ...trip.places].map((p) => [p.latitude, p.longitude]);
