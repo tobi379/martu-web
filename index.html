@@ -38,16 +38,19 @@ const strings = {
         photo: "Foto", open: "Usar como plantilla en Vayra", hint: "Se abre en Vayra para iPhone: el viaje entra como uno nuevo, con sus paradas y lugares.",
         notFound: "Este viaje ya no se comparte.", notFoundHint: "Quien lo compartió cerró el link, o el link está incompleto.",
         offline: "No pudimos cargar el viaje", offlineHint: "Revisa la conexión y vuelve a intentar.", retry: "Reintentar",
-        twoFingers: "Usa dos dedos para mover el mapa", eat: "Comer", sleep: "Dormir", do: "Hacer", see: "Ver", tip: "Tip" },
+        twoFingers: "Usa dos dedos para mover el mapa", eat: "Comer", sleep: "Dormir", do: "Hacer", see: "Ver", tip: "Tips" },
   en: { places: "places", countries: "countries", days: "days", nights: (n) => n === 1 ? "1 night" : `${n} nights`,
         photo: "Photo", open: "Use as a template in Vayra", hint: "Opens in Vayra for iPhone: the trip comes in as a new one, with its stops and places.",
         notFound: "This trip is no longer shared.", notFoundHint: "Whoever shared it closed the link, or the link is incomplete.",
         offline: "We couldn't load the trip", offlineHint: "Check your connection and try again.", retry: "Try again",
-        twoFingers: "Use two fingers to move the map", eat: "Eat", sleep: "Sleep", do: "Do", see: "See", tip: "Tip" },
+        twoFingers: "Use two fingers to move the map", eat: "Eat", sleep: "Sleep", do: "Do", see: "See", tip: "Tips" },
 };
 const lang = (navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en";
 const t = strings[lang];
 document.documentElement.lang = lang;
+// El emoji de la lista (7g) y su nombre si es una de las de siempre; de una lista propia solo se ve el emoji.
+const listEmoji = { eat: "🍜", sleep: "🛏️", do: "🎯", see: "📸", tip: "💡" };
+const listLabel = (p) => [p.emoji || listEmoji[p.category] || "📍", listEmoji[p.category] ? t[p.category] : ""].filter(Boolean).join(" ");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 // Las fechas del viaje son días de calendario (medianoche UTC): se muestran en UTC o alguien al oeste ve un día antes.
 const day = (ms, year = false) => new Intl.DateTimeFormat(lang, { day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}), timeZone: "UTC" }).format(new Date(ms));
@@ -81,7 +84,7 @@ async function main() {
     return `<section class="stop"><h2><span class="n">${i + 1}</span>${esc(s.city)}<small>${t.nights(s.nights)} · ${day(arrivals[i])}</small></h2>
       ${places.map((p) => `<a class="place" ${/^https?:/i.test(p.sourceURL) ? `href="${esc(p.sourceURL)}" target="_blank" rel="noopener"` : ""}>
         ${p.photo ? `<img src="${SUPABASE}/functions/v1/trip/${encodeURIComponent(token)}/photo/${p.id}" alt="" loading="lazy">` : `<span class="ph"></span>`}
-        <span><b>${esc(p.name)}</b><small>${esc(t[p.category] ?? p.category)}</small>${p.photo && p.photoCredit ? `<small class="credit">${t.photo}: ${esc(p.photoCredit)}</small>` : ""}</span></a>`).join("")}
+        <span><b>${esc(p.name)}</b><small>${esc(listLabel(p))}</small>${p.photo && p.photoCredit ? `<small class="credit">${t.photo}: ${esc(p.photoCredit)}</small>` : ""}</span></a>`).join("")}
     </section>`;
   }).join("");
   document.getElementById("app").innerHTML = `
