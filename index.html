@@ -109,9 +109,9 @@ async function main() {
   const countries = new Set([...trip.stops, ...trip.places].map((x) => x.countryCode).filter(Boolean)).size;
   const days = Math.round((Date.parse(trip.endDate) - Date.parse(trip.startDate)) / 86_400_000) + 1;
   const stats = `${trip.places.length} ${t.places} · ${countries} ${t.countries} · ${days} ${t.days}`;
-  // Llegada a cada parada, igual que Trip.arrival en la app: la salida más las noches anteriores; un vuelo fijo reancla.
+  // Llegada a cada parada, igual que Trip.arrival en la app: la salida más las noches anteriores; un vuelo o un día elegido reancla.
   let cursor = Date.parse(trip.startDate);
-  const arrivals = trip.stops.map((s) => { if (s.arrivalOverride) cursor = Date.parse(s.arrivalOverride); const a = cursor; cursor += s.nights * 86_400_000; return a; });
+  const arrivals = trip.stops.map((s) => { if (s.arrivalOverride || s.arrivalDay) cursor = Date.parse(s.arrivalOverride || s.arrivalDay); const a = cursor; cursor += s.nights * 86_400_000; return a; });
   const stopsHTML = trip.stops.map((s, i) => {
     const places = trip.places.filter((p) => p.stopOrder === s.order);
     return `<section class="stop"><h2><span class="n">${i + 1}</span>${esc(s.city)}<small>${t.nights(s.nights)} · ${day(arrivals[i])}</small></h2>
